@@ -28,20 +28,15 @@ const startApolloServer = async (app, httpServer) => {
     typeDefs,
     resolvers,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-    introspection: true, // Enable schema introspection
-    // Use the old GraphQL Playground
-    playground: {
-      endpoint: "/graphql", // Explicit endpoint for Playground
-      settings: {
-        "request.credentials": "same-origin",
-      },
-    },
+    introspection: true, // Enable schema introspection in production
+    // Disable Apollo Sandbox and force GraphQL Playground
+    playground: true,
   });
 
   await server.start();
   server.applyMiddleware({
     app,
-    path: "/graphql", // Ensure the GraphQL endpoint is accessible
+    path: "/graphql", // Set the GraphQL endpoint
   });
 };
 
