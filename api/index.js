@@ -1,39 +1,58 @@
-import { ApolloServer, gql } from "apollo-server-express";
-import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
-import http from "http";
-import express from "express";
-import cors from "cors";
+const { ApolloServer, gql } = require('apollo-server');
 
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-const httpServer = http.createServer(app);
-
+// Define the GraphQL schema
 const typeDefs = gql`
+  type Person {
+    id: ID!
+    name: String!
+    email: String!
+  }
+
+  type Admin {
+    id: ID!
+    name: String!
+    email: String!
+    role: String!
+  }
+
   type Query {
-    hello: String
+    people: [Person!]!
+    admins: [Admin!]!
   }
 `;
 
+// Define the resolvers
 const resolvers = {
   Query: {
-    hello: () => "world",
+    people: () => [
+      { id: 1, name: 'Alice', email: 'alice@example.com' },
+      { id: 2, name: 'Bob', email: 'bob@example.com' },
+      { id: 3, name: 'Charlie', email: 'charlie@example.com' },
+    ],
+    admins: () => [
+      { id: 1, name: 'Admin Alice', email: 'adminalice@example.com', role: 'Super Admin' },
+      { id: 2, name: 'Admin Bob', email: 'adminbob@example.com', role: 'Moderator' },
+    ],
   },
 };
 
-const startApolloServer = async(app, httpServer) => {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  });
+// Create the Apollo Server instance with request logging
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: ({ req }) => {
+    console.log('Request Headers:', req.headers);
+    // You can log any other part of the request here (e.g., body, method, etc.)
+    return {};
+  },
+  formatResponse: (response, requestContext) => {
+    // Log the response if necessary
+    // console.log('Response:', response);
+    return response;
+  },
+});
 
-  await server.start();
-  server.applyMiddleware({ app });
-}
-
-startApolloServer(app, httpServer);
-
-export default httpServer;
+// Start the server
+server.listen().then(({ url }) => {
+  console.log(`🚀 Server ready at ${url}`);
+});
